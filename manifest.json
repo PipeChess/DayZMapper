@@ -1,0 +1,15 @@
+{
+    "short_name": "[DayZMapper]",
+    "name": "DayZMapper",
+    "icons": [
+        {
+            "src": "/assets/icons/apple-touch-icon.png",
+            "type": "image/png",
+            "sizes": "180x180"
+        }
+    ],
+    "start_url": "/index.html",
+    "background_color": "#000000",
+    "display": "standalone",
+    "theme_color": "#123456"
+}
