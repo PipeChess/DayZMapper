@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>DAYZ SA | [MFG] The Ministry | Community Server hosted by pipechess</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="MFG a DayZ server">
+        <link rel="manifest" href="manifest.json">
+
+        <meta name="theme-color" content="#FBBC05"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="/assets/icons/favicon.ico">
+
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://kit.fontawesome.com/cab26551ab.js" crossorigin="anonymous"></script>
+
+        <script src="/libs/bootstrap-4.6.0/js/bootstrap.min.js"></script>
+        <script src="/libs/coopTables/tables.js"></script>
+        <script src="/libs/toast/jquery.toast.min.js"></script>
+        <script src="/assets/js/app.js"></script>
+
+        <link rel="stylesheet" href="/libs/bootstrap-4.6.0/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="/libs/coopTables/tables.css">
+        <link rel="stylesheet" href="/libs/toast/jquery.toast.min.css"/>
+        <link rel="stylesheet" href="/assets/css/darkly.css"/>
+        <link rel="stylesheet" href="/assets/css/page.css"/>
+    </head>
+
+    <body>
+        <video autoplay muted loop id="myVideo">
+            <source src="/assets/video/dayz_back.mp4" type="video/mp4">
+        </video>
+        <div class="container mt-3" id="contain_el">
+            <div class="row">
+                <img src="assets/img/ministry_logo.png" class="mx-auto d-block" style="z-index: 1; height: 50%;"/>
+            </div>
+
+            <br />
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-warning">
+                <a class="navbar-brand" href="#">
+                    <img src="./assets/img/small_dayz_logo.png">
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                        <div class="btn-group-sm mb-3">
+                            <div class="btn-group">
+                                <a class="btn btn-secondary btn-sm" :class="displayMode == 'map' ? 'active': ''" href="#" v-on:click="changeDisplayMode('map');"><i class="fa fa-map-pin"></i>&nbsp; Map</a>
+                                <a class="btn btn-secondary btn-sm" :class="displayMode == 'log' ? 'active': ''" href="#" v-on:click="changeDisplayMode('log');"><i class="fa fa-list"></i>&nbsp; Log</a>
+                                <a class="btn btn-secondary btn-sm" :class="displayMode == 'playerList' ? 'active': ''" href="#" v-on:click="changeDisplayMode('playerList');"><i class="fa fa-users"></i>&nbsp; Player Tracker</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="badge badge-dark" v-if="selected_file.date == this.current_date">{{players_online}} player{{players_online==1?'':'s'}} online</span>
+                <span class="badge badge-danger">{{deathCount}} death{{deathCount==1?'':'s'}} {{selected_file.date == this.current_date ? 'today' : ('on ' + selected_file.date)}}</span>
+            </nav>
+            <div class="row" v-if="displayMode === 'log'">
+                <div class="col" id="logContainer">
+                    <div class="table-responsive" style="height: 55vh !important;">
+                        <table class="table table-warning text-dark overflow-auto">
+                            <thead class="thead-dark">
+                                <tr class="text-center">
+                                    <th colspan="5">
+                                        <h4>Event Log from {{selected_file.date_formatted?selected_file.date_formatted :current_date_formatted}}</h4>
+                                    </th>
+                                </tr>
+                                <tr class="text-center">
+                                    <th colspan="5">
+                                        <select class="form-control-sm" v-model="selected_file">
+                                            <option v-for="file in archive_files" :value="file">
+                                                {{current_date == file.date ? 'today\'s log' : 'log from ' + file.date}}
+                                            </option>
+                                        </select>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event</th>
+                                    <th>Player</th>
+                                    <th>Message</th>
+                                    <th>uuid</th>
+                                </tr>
+                            </thead>
+                            <tr v-for="log of getLog">
+                                <td><small>{{displayDateTime(log.date)}}</small></td>
+                                <td><i :class="'fa ' + log.type.icon"></i></td>
+                                <td><span class="badge badge-dark">{{log.player.name}}</span></td>
+                                <td v-html="log.msg"></td>
+                                <td>{{log.player.uuid}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row" v-if="displayMode === 'playerList'">
+                <div class="col">
+                    <div class="table-responsive" style="height: 55vh !important;">
+                        <table class="table table-warning text-dark overflow-auto">
+                            <thead class="thead-dark">
+                                <tr class="text-center">
+                                    <th colspan="3">
+                                        <h4>All players on {{selected_file.date_formatted?selected_file.date_formatted :current_date_formatted}}</h4>
+                                    </th>
+                                </tr>
+                                <tr class="text-center">
+                                    <th colspan="3">
+                                        <select class="form-control-sm" v-model="selected_file">
+                                            <option v-for="file in archive_files" :value="file">{{current_date == file.date ? 'today\'s log' : 'log from ' + file.date}}</option>
+                                        </select>
+                                    </th>
+                                </tr>
+                                <tr><th>Player Name</th><th>Last Seen</th></tr>
+                            </thead>
+                            <tr v-for="date, name in player_list">
+                                <td>{{name}}</td>
+                                <td>{{displayDateTime(date)}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row" v-if="displayMode === 'map'">
+                <div class="col text-center">
+                    <table class="table table-warning text-dark overflow-auto">
+                        <thead class="thead-dark">
+                            <tr class="text-center">
+                                <th colspan="3">
+                                    <h4>Event Log from {{selected_file.date_formatted?selected_file.date_formatted :current_date_formatted}}</h4>
+                                </th>
+                            </tr>
+                            <tr class="text-center">
+                                <th colspan="3">
+                                    <!--<div class="input-group">-->
+                                        <select class="form-control-sm" v-model="selected_file">
+                                            <option v-for="file in archive_files" :value="file">
+                                                {{current_date == file.date ? 'today\'s log' : 'log from ' + file.date}}
+                                            </option>
+                                        </select>
+                                        <!--<input type="checkbox" value=true v-model="currentLog" />-->
+                                    <!--</div>-->
+                                </th>
+                            </tr>
+                            <tr class="text-center">
+                                <th colspan="3" v-if="!currentLog">
+                                    Map shows last know position of all players for the given day 
+                                </th>
+                                <th v-else>
+                                    Player indicator shows all players online within the last 5 minutes
+                                </th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <img id='map_full' v-bind:src="'/maps/'+mapName +'/map_full.jpg'" class="img-fluid dropshadowclass" v-if="this.mapType == 'map_full'" />
+                    <img id='map_nw' v-bind:src="'/maps/'+mapName +'/map_nw.jpg'" class="img-fluid dropshadowclass" v-if="this.mapType == 'map_nw'" />
+                    <img id='map_ne' v-bind:src="'/maps/'+mapName +'/map_ne.jpg'" class="img-fluid dropshadowclass" v-if="this.mapType == 'map_ne'" />
+                    <img id='map_se' v-bind:src="'/maps/'+mapName +'map_se.jpg'" class="img-fluid dropshadowclass" v-if="this.mapType == 'map_se'" />
+                    <img id='map_sw' v-bind:src="'/maps/'+mapName +'map_sw.jpg'" class="img-fluid dropshadowclass" v-if="this.mapType == 'map_sw'" />
+                    <canvas id='map_canvas'></canvas>
+                </div>
+                <br />
+                <br />
+            </div>
+        </div>
+    </body>
+</html>
